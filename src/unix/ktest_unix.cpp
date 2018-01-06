@@ -7,10 +7,18 @@
 
 #include "../ktest.h"
 
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 #include <pwd.h>
+#include <cerrno>
+#include <cstring>
 #include <syslog.h>
-#include <csignal>
 
 #include <vector>
 #include <sstream>
