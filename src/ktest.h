@@ -37,6 +37,10 @@ bool ktest_init();
 
 std::string create_test_dir(const std::string &path);
 
+std::string create_test_dir();
+
+bool delete_test_dir(const std::string &path);;
+
 checking_result check_solution(
         const run_limits &limits,
         const std::string &command,
