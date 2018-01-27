@@ -2,58 +2,57 @@ language: cpp
 
 env:
   global:
-    # Ubuntu version
-    - LINUX_DIST=trusty
-    - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
-    # Global build options and C++ flags
-    - CXX_FLAGS="-Wall -pedantic -Werror -Wno-variadic-macros -Wno-long-long -Wno-shadow"
-    # Misc
-    - RUN_TESTS=true
-    - COVERAGE=false
+  - LINUX_DIST=trusty
+  - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
+  - CXX_FLAGS="-Wall -pedantic -Werror -Wno-variadic-macros -Wno-long-long -Wno-shadow"
+  - RUN_TESTS=true
+  - COVERAGE=false
 
 matrix:
   include:
-    - os: linux
-#      dist: trusty
-      sudo: true
-#      compiler: gcc
-      addons:
-       apt:
-         packages: &precise_latest_boost_packages
-           - g++-7
-#           - clang-5.0
-#           - valgrind
-         sources: &precise_latest_boost_sources
-           - ubuntu-toolchain-r-test
-           - llvm-toolchain-precise-3.7
+  - os: linux
+    sudo: true
+    addons:
+      apt:
+        packages:
+        - g++-7
+        sources:
+        - ubuntu-toolchain-r-test
+        - llvm-toolchain-precise-3.7
 
 before_install:
-    # Combine global build options with OS/compiler-dependent options
-    - export CMAKE_OPTIONS=${CMAKE_OPTIONS}" "${ENV_CMAKE_OPTIONS}
-    - export CXX_FLAGS=${CXX_FLAGS}" "${ENV_CXX_FLAGS}
+  - export CMAKE_OPTIONS=${CMAKE_OPTIONS}" "${ENV_CMAKE_OPTIONS}
+  - export CXX_FLAGS=${CXX_FLAGS}" "${ENV_CXX_FLAGS}
+  install:
+  - if [ "$CXX" = "clang++" ] && [ "$TRAVIS_OS_NAME" = "linux" ]; then export CXX="clang++-3.7"
+    CC="clang-3.7"; fi
+  - echo ${PATH}
+  - echo ${CXX}
+  - "${CXX} --version"
+  - "${CXX} -v"
+  - |
+    if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
+      CMAKE_URL="https://cmake.org/files/v3.10/cmake-3.10.2.tar.gz"
+      mkdir -p ${DEPS_DIR}/cmake
+      travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake
+      export PATH=${DEPS_DIR}/cmake/bin:${PATH}
+    fi
 
-install:
-    - if [ "$CXX" = "clang++" ] && [ "$TRAVIS_OS_NAME" = "linux" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
-    - echo ${PATH}
-    - echo ${CXX}
-    - ${CXX} --version
-    - ${CXX} -v
-
-    # Download and install recent cmake
-    - |
-      if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-        CMAKE_URL="https://cmake.org/files/v3.10/cmake-3.10.2.tar.gz"
-        mkdir -p ${DEPS_DIR}/cmake
-        travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake
-        export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-      fi
 script:
-    ############################################################################
-    # Build main and tests
-    ############################################################################
-     - mkdir -p build
-     - cd build
-     - cmake ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_BUILD_TYPE=Coverage -DBUILD_TESTS=ON ..
-     - make
-     - make kjudge_core
-     - ctest
+  - mkdir -p build
+  - cd build
+  - cmake ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_BUILD_TYPE=Coverage
+    -DBUILD_TESTS=ON ..
+  - make
+  - make kjudge_core
+  - ctest
+
+deploy:
+  provider: releases
+  api_key:
+    secure: S0X7vzbqoiUAvgwzk5ogHaa989sh6UPi0LisWQUN0AUBzWd5KWfFHfrj+w+dIDhYk/5Q7e4Xa5Xopz1AkK6aQyTqVBcx+lCYYbqp/+9xUvtv1vvMlYrW7422ywDtRf7AYr50VJrInWOEq3snH+Btk7Fbjguf/PGQsjHpICbJbcapGL2XaTM14AVVMLqEvo6UDJgPcOhz5h0E5GyLBdC3MoEiisIkvBh86zVxoxKzOdfsZAHF2Dqk/Uu1xMNc/ompZvd4GVjbN+vt+cSYFgGR+8JUtVmBli375YPwuaroDSpd3E2XwtRokbAYPJLgYLktFbbkxWle72XzBXSu/PzKr1GaYDHiegVbNJANtuHMQgbqdmFdAXb4XNi9K7ZdFA2bqY/QdG06LKv81/Kh2k3DksI9rECisYsAQalKFiLdRxXXDuciEqNZedDu7kpXFLxZIljCVeQ6Hq0r5RVFh/oFEDv/uMnQbKjM5U35fJLaxfJjt1gHJJmLMcbDk/tfhnWSejtIQzEogy/sz3BjVIeDLqWalN3A0a5TriutrhTJbWjmIikoAEvlkLQ8yJlDGuM97o9VBD7GCwAhRFBfAgmu18gief0PqAWfJ0c/eY55aSUlMC0iK2S4BrLVqC2fO3l/LMHOCO16GTpzBE1oizQ98KZrSLt5oI1N+YO7N8vd9k4=
+  skip_cleanup: true
+  file: build/libkjudge_core.so
+  on:
+    tags: true
+    repo: Mikhail57/kjudge-core
