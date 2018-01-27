@@ -21,7 +21,7 @@ matrix:
        apt:
          packages: &precise_latest_boost_packages
            - g++-7
-           - clang-5.0.1
+           - clang-5.0
            - valgrind
          sources: &precise_latest_boost_sources
            - ubuntu-toolchain-r-test
