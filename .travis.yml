@@ -14,14 +14,13 @@ env:
 matrix:
   include:
     - os: linux
-      dist: trusty
+#      dist: trusty
       sudo: true
-      compiler: gcc
+#      compiler: gcc
       addons:
        apt:
          packages: &precise_latest_boost_packages
-           - gcc-7.3
-           - g++-7.3
+           - g++-7
            - clang-5.0.1
            - valgrind
          sources: &precise_latest_boost_sources
