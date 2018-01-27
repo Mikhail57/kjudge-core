@@ -18,6 +18,7 @@
 #include <pwd.h>
 #include <cerrno>
 #include <cstring>
+#include <csignal>
 #include <syslog.h>
 
 #include <vector>
