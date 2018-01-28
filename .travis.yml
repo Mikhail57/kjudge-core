@@ -52,7 +52,7 @@ deploy:
   api_key:
     secure: S0X7vzbqoiUAvgwzk5ogHaa989sh6UPi0LisWQUN0AUBzWd5KWfFHfrj+w+dIDhYk/5Q7e4Xa5Xopz1AkK6aQyTqVBcx+lCYYbqp/+9xUvtv1vvMlYrW7422ywDtRf7AYr50VJrInWOEq3snH+Btk7Fbjguf/PGQsjHpICbJbcapGL2XaTM14AVVMLqEvo6UDJgPcOhz5h0E5GyLBdC3MoEiisIkvBh86zVxoxKzOdfsZAHF2Dqk/Uu1xMNc/ompZvd4GVjbN+vt+cSYFgGR+8JUtVmBli375YPwuaroDSpd3E2XwtRokbAYPJLgYLktFbbkxWle72XzBXSu/PzKr1GaYDHiegVbNJANtuHMQgbqdmFdAXb4XNi9K7ZdFA2bqY/QdG06LKv81/Kh2k3DksI9rECisYsAQalKFiLdRxXXDuciEqNZedDu7kpXFLxZIljCVeQ6Hq0r5RVFh/oFEDv/uMnQbKjM5U35fJLaxfJjt1gHJJmLMcbDk/tfhnWSejtIQzEogy/sz3BjVIeDLqWalN3A0a5TriutrhTJbWjmIikoAEvlkLQ8yJlDGuM97o9VBD7GCwAhRFBfAgmu18gief0PqAWfJ0c/eY55aSUlMC0iK2S4BrLVqC2fO3l/LMHOCO16GTpzBE1oizQ98KZrSLt5oI1N+YO7N8vd9k4=
   skip_cleanup: true
-  file: build/libkjudge_core.so
+  file: libkjudge_core.so
   on:
     tags: true
     repo: Mikhail57/kjudge-core
