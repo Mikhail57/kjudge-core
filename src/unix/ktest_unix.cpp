@@ -3,6 +3,7 @@
 //
 
 #include "../sysconf.h"
+
 #ifdef UNIX
 
 #include "../ktest.h"
@@ -41,64 +42,70 @@ bool ktest_init() {
     return true;
 }
 
-std::string create_test_dir(const std::string &path) {
+char *create_test_dir(const char *path) {
     /*Генерируем случайное имя папки.*/
-    std::string tnam = path + "/ktest-XXXXXX";
-    string tdir = mkdtemp(const_cast<char *>(tnam.c_str()));
+    char tnam[1024];
+    strcat(tnam, path);
+    strcat(tnam, "/ktest-XXXXXX");
+    char *tdir = mkdtemp(tnam);
 
     /*Создаем временную директорию.*/
-    mkdir(tdir.c_str(), 0750);
+    mkdir(tdir, 0750);
 
     return tdir;
 }
 
-std::string create_test_dir() {
+char *create_test_dir() {
     return create_test_dir("/tmp");
 }
 
-bool delete_test_dir(const std::string &path) {
-    return recur_rmdir(path.c_str(), nullptr) != 0;
+bool delete_test_dir(const char *path) {
+    return recur_rmdir(path, nullptr) != 0;
 }
 
 checking_result check_solution(
         const run_limits &limits,
-        const std::string &command,
-        const std::string &test_dir_path,
-        std::istream input_test,
-        std::ostream output
+        const char *command,
+        const char *test_dir_path,
+        const char *input_test,
+        char *output
 ) {
-    std::stringstream ss;
-    return check_solution(limits, command, test_dir_path, input_test, output, ss);
+    char err[2048];
+    return check_solution(limits, command, test_dir_path, input_test, output, err);
 }
 
 checking_result check_solution(
         const run_limits &limits,
-        const std::string &command,
-        const std::string &test_dir_path,
-        std::istream &input_test,
-        std::ostream &output,
-        std::ostream &error_stream
+        const char *command,
+        const char *test_dir_path,
+        const char *input,
+        char *output,
+        char *error
 ) {
-    return check_solution_as_user(limits, command, test_dir_path, input_test, output, error_stream, "", "", "");
+    return check_solution_as_user(limits, command, test_dir_path, input, output, error, "", "", "");
 }
 
 checking_result check_solution_as_user(
         const run_limits &limits,
-        const std::string &command,
-        const std::string &test_dir_path,
-        std::istream &input_test,
-        std::ostream &output,
-        std::ostream &error_stream,
-        const std::string &username,
-        const std::string &domain,
-        const std::string &password
+        const char *command,
+        const char *test_dir_path,
+        const char *input,
+        char *output,
+        char *error,
+        const char *username,
+        const char *domain,
+        const char *password
 ) {
+    std::istringstream input_stream(input);
+    std::ostringstream output_stream;
+    std::ostringstream error_stream;
+
     checking_result res;
     res.res_type = KTEST_INTERNAL_ERROR;
     res.ret_value = 0;
 
     //Мера предосторожности.
-    if (test_dir_path == "/") {
+    if (strcmp(test_dir_path, "/") == 0) {
         return res;
     }
 
@@ -114,7 +121,7 @@ checking_result check_solution_as_user(
             syslog(LOG_CRIT, "fork() failed (errno=%d): %s", errno, strerror(errno));
             return res;
         case 0:
-            if (!route_to_stdin(input_test)) {
+            if (!route_to_stdin(input_stream)) {
                 syslog(LOG_CRIT, "Input data routing failed (errno=%d): %s", errno, strerror(errno));
                 _exit(KTEST_INTERNAL_ERROR);
             }
@@ -144,12 +151,12 @@ checking_result check_solution_as_user(
 
             if (geteuid() == 0) is_root = true;
 
-            chdir(test_dir_path.c_str());
+            chdir(test_dir_path);
 
             if (is_root) {
-                chmod(test_dir_path.c_str(), 0500);
+                chmod(test_dir_path, 0500);
 
-                chown(test_dir_path.c_str(), cred->pw_uid, cred->pw_gid);
+                chown(test_dir_path, cred->pw_uid, cred->pw_gid);
 
                 /*Сбрасываем привилегии.*/
                 if ((setuid(cred->pw_uid) != 0))
@@ -184,7 +191,7 @@ checking_result check_solution_as_user(
 
             //Запускаем решение.
             vector<char *> args;
-            stringstream ss(command + " ");
+            stringstream ss(std::string(command) + " ");
             while (ss.good()) {
                 string tmps;
                 ss >> tmps;
@@ -224,7 +231,7 @@ checking_result check_solution_as_user(
             } else {
                 readed_bytes += len;
                 // Пишем полученные от решения байты в выходной поток.
-                output.write(buf, len);
+                output_stream.write(buf, len);
             }
         }
 
@@ -287,6 +294,9 @@ checking_result check_solution_as_user(
 
     //Чтобы не было зомби.
     while (waitpid(-1, nullptr, WNOHANG) > 0) {};
+
+    strcpy(output, output_stream.str().c_str());
+    strcpy(error, error_stream.str().c_str());
 
     return res;
 }
